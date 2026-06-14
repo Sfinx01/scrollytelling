@@ -64,7 +64,7 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
     Papua: "#16A085",
   };
 
-  const provinces = (props?.provinces || fallbackProvinces) as Array<{ name: string; radio: number; turnout: number; island: string }>;
+  const provinces = (props?.provinces || fallbackProvinces) as Array<any>;
   const islandColors = (props?.islandColors || fallbackIslandColors) as Record<string, string>;
   const xDomain = (props?.xDomain || [32, 70]) as [number, number];
   const yDomain = (props?.yDomain || [65, 92]) as [number, number];
@@ -74,6 +74,22 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
     color: string;
   };
   const trendLineStyle = (props?.trendLine || { color: "#C0392B" }) as { color: string };
+
+  // New, backward-compatible options.
+  const xLabel = props?.xLabel ?? "Radio Consumption (% population)";
+  const yLabel = props?.yLabel ?? "Voter Turnout (%)";
+  const xName = props?.xName ?? "Radio";
+  const yName = props?.yName ?? "Turnout";
+  const xTickSuffix = props?.xTickSuffix ?? "%";
+  const yTickSuffix = props?.yTickSuffix ?? "%";
+  const showTrendLine = props?.showTrendLine ?? true;
+  const vLine = props?.vLine as { x: number; label: string; color: string } | undefined;
+
+  // Generic accessors so event-study data (x / y / group / ylo / yhi) works
+  // alongside the original radio / turnout / island fields.
+  const getX = (d: any) => (d.x ?? d.radio);
+  const getY = (d: any) => (d.y ?? d.turnout);
+  const getGroup = (d: any) => (d.group ?? d.island);
 
   const svg = d3
     .select(mountEl)
@@ -89,8 +105,8 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
     .append("g")
     .attr("class", "axis")
     .attr("transform", `translate(0,${iH})`)
-    .call(d3.axisBottom(x).ticks(6).tickFormat((d: number) => d + "%"));
-  svg.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(5).tickFormat((d: number) => d + "%"));
+    .call(d3.axisBottom(x).ticks(6).tickFormat((d: number) => d + xTickSuffix));
+  svg.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(5).tickFormat((d: number) => d + yTickSuffix));
 
   svg
     .append("text")
@@ -100,7 +116,7 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
     .style("font-family", "Inter,sans-serif")
     .style("font-size", "11px")
     .attr("fill", "var(--ink-muted)")
-    .text("Radio Consumption (% population)");
+    .text(xLabel);
   svg
     .append("text")
     .attr("transform", "rotate(-90)")
@@ -110,54 +126,95 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
     .style("font-family", "Inter,sans-serif")
     .style("font-size", "11px")
     .attr("fill", "var(--ink-muted)")
-    .text("Voter Turnout (%)");
+    .text(yLabel);
 
-  const xVals = provinces.map((d) => d.radio);
-  const yVals = provinces.map((d) => d.turnout);
-  const xMean = d3.mean(xVals);
-  const yMean = d3.mean(yVals);
-  const slope =
-    d3.sum(xVals.map((xi: number, i: number) => (xi - xMean) * (yVals[i] - yMean))) /
-    d3.sum(xVals.map((xi: number) => (xi - xMean) ** 2));
-  const intercept = yMean - slope * xMean;
+  // Optional OLS trend line (default on, for the original correlation use).
+  if (showTrendLine) {
+    const xVals = provinces.map((d) => getX(d));
+    const yVals = provinces.map((d) => getY(d));
+    const xMean = d3.mean(xVals);
+    const yMean = d3.mean(yVals);
+    const slope =
+      d3.sum(xVals.map((xi: number, i: number) => (xi - xMean) * (yVals[i] - yMean))) /
+      d3.sum(xVals.map((xi: number) => (xi - xMean) ** 2));
+    const intercept = yMean - slope * xMean;
 
-  const trendLine = svg
-    .append("line")
-    .attr("x1", x(xDomain[0]))
-    .attr("y1", y(slope * xDomain[0] + intercept))
-    .attr("x2", x(xDomain[0]))
-    .attr("y2", y(slope * xDomain[0] + intercept))
-    .attr("stroke", trendLineStyle.color)
-    .attr("stroke-width", 2)
-    .attr("stroke-dasharray", "6,3")
-    .attr("opacity", 0.7);
+    const trendLine = svg
+      .append("line")
+      .attr("x1", x(xDomain[0]))
+      .attr("y1", y(slope * xDomain[0] + intercept))
+      .attr("x2", x(xDomain[0]))
+      .attr("y2", y(slope * xDomain[0] + intercept))
+      .attr("stroke", trendLineStyle.color)
+      .attr("stroke-width", 2)
+      .attr("stroke-dasharray", "6,3")
+      .attr("opacity", 0.7);
 
-  trendLine
-    .transition()
-    .delay(provinces.length * 40 + 200)
-    .duration(800)
-    .attr("x2", x(xDomain[1]))
-    .attr("y2", y(slope * xDomain[1] + intercept));
+    trendLine
+      .transition()
+      .delay(provinces.length * 40 + 200)
+      .duration(800)
+      .attr("x2", x(xDomain[1]))
+      .attr("y2", y(slope * xDomain[1] + intercept));
+  }
+
+  // Optional vertical reference line (e.g. treatment timing in an event study).
+  if (vLine) {
+    svg
+      .append("line")
+      .attr("x1", x(vLine.x))
+      .attr("y1", 0)
+      .attr("x2", x(vLine.x))
+      .attr("y2", iH)
+      .attr("stroke", vLine.color)
+      .attr("stroke-dasharray", "3,3")
+      .attr("stroke-width", 1.5)
+      .attr("opacity", 0.6);
+    svg
+      .append("text")
+      .attr("x", x(vLine.x) + 4)
+      .attr("y", 12)
+      .attr("fill", vLine.color)
+      .style("font-size", "10px")
+      .style("font-family", "Inter,sans-serif")
+      .style("font-style", "italic")
+      .text(vLine.label);
+  }
 
   const prevTooltip = panelEl.querySelector(".d3-tooltip");
   if (prevTooltip) prevTooltip.remove();
   const tooltip = d3.select(panelEl).append("div").attr("class", "d3-tooltip");
 
+  // Optional confidence-interval whiskers (drawn when a point carries ylo / yhi).
+  provinces.forEach((d) => {
+    if (d.ylo == null || d.yhi == null) return;
+    svg
+      .append("line")
+      .attr("x1", x(getX(d)))
+      .attr("x2", x(getX(d)))
+      .attr("y1", y(d.ylo))
+      .attr("y2", y(d.yhi))
+      .attr("stroke", islandColors[getGroup(d)] || "var(--ink-muted)")
+      .attr("stroke-width", 1.5)
+      .attr("opacity", 0.45);
+  });
+
   provinces.forEach((d, i) => {
     svg
       .append("circle")
-      .attr("cx", x(d.radio))
-      .attr("cy", y(d.turnout))
+      .attr("cx", x(getX(d)))
+      .attr("cy", y(getY(d)))
       .attr("r", 0)
-      .attr("fill", islandColors[d.island] || "var(--ink-muted)")
+      .attr("fill", islandColors[getGroup(d)] || "var(--ink-muted)")
       .attr("opacity", 0.8)
       .attr("stroke", "var(--paper)")
       .attr("stroke-width", 1.2)
       .on("mouseover", function (this: SVGCircleElement, evt: any) {
         d3.select(this).attr("r", 9).attr("opacity", 1);
+        const ci = d.ylo != null && d.yhi != null ? `<br>95% CI: [${d.ylo}, ${d.yhi}]` : "";
         tooltip
           .classed("visible", true)
-          .html(`<strong>${d.name}</strong><br>Radio: ${d.radio}%<br>Turnout: ${d.turnout}%`)
+          .html(`<strong>${d.name}</strong><br>${xName}: ${getX(d)}${xTickSuffix}<br>${yName}: ${getY(d)}${yTickSuffix}${ci}`)
           .style("left", evt.offsetX + 12 + "px")
           .style("top", evt.offsetY - 40 + "px");
       })
@@ -193,10 +250,10 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
     .style("font-style", "italic")
     .text(referenceLine.label);
 
-  const islands = [...new Set(provinces.map((d) => d.island))];
+  const islands = [...new Set(provinces.map((d) => getGroup(d)))];
   const legG = svg.append("g").attr("transform", `translate(${iW + 10}, 10)`);
   islands.forEach((isl, i) => {
-    legG.append("circle").attr("cx", 6).attr("cy", i * 18).attr("r", 5).attr("fill", islandColors[isl]);
+    legG.append("circle").attr("cx", 6).attr("cy", i * 18).attr("r", 5).attr("fill", islandColors[isl as string]);
     legG
       .append("text")
       .attr("x", 16)
@@ -204,6 +261,6 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
       .style("font-size", "9px")
       .style("font-family", "Inter,sans-serif")
       .attr("fill", "var(--ink-muted)")
-      .text(isl);
+      .text(isl as string);
   });
 }
