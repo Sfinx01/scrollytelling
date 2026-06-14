@@ -9,79 +9,103 @@ import ScrollySection from '../../components/scrolly/ScrollySection.astro';
   <div class="section-label">Section 01</div>
   ## The Promise of Additionality
 
-  Green bonds are sold on a simple promise: that labelling debt as green channels capital toward environmental projects that would not otherwise have been financed. This is additionality, and it is the entire reason a separate climate-finance instrument is supposed to exist.
-
-  If conventional debt could fund the same projects, the case for green bonds weakens. The market has grown on the assumption that issuance causes real physical transition. Yet almost no study has tested the first link in that chain directly: does issuing a green bond actually raise what a firm invests?
+  Green bonds are sold on a simple promise: that labelling debt as green channels capital toward environmental projects that would not otherwise have been financed.
+  This is additionality, and it is the entire reason a separate climate-finance instrument is supposed to exist.
+  If conventional debt could fund the same projects, the case for green bonds weakens.
+  The market has grown exponentially on the assumption that issuance causes real physical transition.
+  Yet almost no study has tested the first link in that chain directly: does issuing a green bond actually raise what a firm invests?
 </ScrollySection>
 
 <ScrollySection id="machine">
   <div class="section-label">Section 02</div>
   ## The Chain Everyone Assumes
 
-  The assumed mechanism runs in a straight line. Issuance raises capital expenditure (H1), that investment lowers Scope 1 and 2 carbon intensity (H2), and an externally reviewed label should strengthen the effect (H3), since certification is a costlier and harder-to-fake signal of commitment (Flammer, 2021).
-
-  This is the difference between stated and revealed additionality. Stated additionality is what issuers claim through the label and use-of-proceeds reporting. Revealed additionality is what issuers actually do with their balance sheet. The test is whether the first turns into the second.
+  The assumed mechanism runs in a straight line.
+  Issuance raises capital expenditure (H1), and that investment lowers Scope 1 and 2 carbon intensity (H2). 
+  An externally reviewed label is expected to strengthen this investment effect (H3), since certification is a costlier and harder-to-fake signal of commitment (Flammer, 2021).
+  This is the difference between stated and revealed additionality. Stated additionality is what issuers claim through the label and use-of-proceeds reporting.
+  Revealed additionality is what issuers actually do with their balance sheet.
+  The test is whether the first turns into the second.
 </ScrollySection>
 
 <ScrollySection id="methodology">
   <div class="section-label">Section 03</div>
   ## A Direct Test
 
-  A clean comparison requires near-twins. Green issuers were matched to conventional bond issuers using cohort-aware Coarsened Exact Matching on firm size, region, industry and pre-issuance emissions trend (Iacus, King and Porro, 2012), so each treated firm is compared against observationally similar firms rather than against the whole market. The panel integrates LSEG, S&P Trucost, Compustat and Mergent FISD, pairing 179 green issuers with 294 conventional issuers across eight treatment cohorts.
-
-  The matched panel is estimated with stacked difference-in-differences and cross-checked with the Callaway and Sant'Anna (2021) estimator, which stays unbiased under staggered treatment where conventional two-way fixed effects do not (Goodman-Bacon, 2021). Pre-treatment trends are flat, so the parallel-trends assumption holds.
+  A clean comparison requires near-twins.
+  Green issuers were matched to conventional bond issuers using cohort-aware Coarsened Exact Matching on firm size, region, industry and pre-issuance emissions trend (Iacus, King and Porro, 2012). 
+  By balancing these covariates perfectly across the sample, each treated firm is compared against observationally identical peers rather than against the whole market.
+  The panel integrates LSEG, S&P Trucost, Compustat and Mergent FISD, pairing 179 green issuers with 294 conventional issuers across eight treatment cohorts.
+  The matched panel is estimated with stacked difference-in-differences and cross-checked with the Callaway and Sant'Anna (2021) estimator, which stays unbiased under staggered treatment where conventional two-way fixed effects do not.
 </ScrollySection>
 
 <ScrollySection id="capex">
   <div class="section-label">Finding 01</div>
   ## The Investment Never Moves
 
-  If green bonds mobilised new capital, treated firms should pull away from their matched controls after issuance. The Callaway and Sant'Anna (2021) event study shows they do not. Before issuance the two groups move together, with flat pre-trends that the Wald test cannot reject (p = 0.66). That is what makes the comparison credible.
+  If green bonds mobilised new capital, treated firms should pull away from their matched controls after issuance.
+  The Callaway and Sant'Anna (2021) event study shows they do not.
+  Looking back a full decade before issuance, the two groups move together in lockstep, with flat pre-trends that the Wald test cannot reject (p = 0.66).
+  That long-horizon stability is what makes the post-issuance comparison credible.
 
-  After issuance, every yearly effect sits on the zero line with confidence intervals that cross it. The pooled effect is a tight null: an ATT of 0.002 on capital expenditure scaled by assets. Investment simply does not respond.
+  After issuance, every yearly effect sits precisely on the zero line with confidence intervals that cross it.
+  The pooled effect is a tight null: an ATT of 0.002 on capital expenditure scaled by assets.
+  Investment simply does not respond.
 </ScrollySection>
 
 <ScrollySection id="hypotheses">
   <div class="section-label">Finding 02</div>
   ## None of the Three Links Holds
 
-  The same verdict holds across all three hypotheses. Each coefficient is shown here as a share of its own 5 percent significance threshold, so the edge of the axis marks the point where an effect would become significant. The investment effect (H1), the carbon-intensity effect (H2) and the certification gap (H3) all sit close to the centre.
-
-  None reaches the line. Certification points in the direction theory predicts, but the gap between reviewed and self-labelled bonds is the size of its own standard error on a handful of certified firms. The magnitudes are statistically indistinguishable from no effect.
+  The same verdict holds across all three hypotheses.
+  Each coefficient is shown here mapped against its own 5 percent significance threshold, so the edge of the axis marks the point where an effect would become statistically significant.
+  The investment effect (H1), the carbon-intensity effect (H2) and the certification gap (H3) all hover tightly around zero.
+  None reaches the line. Certification points in the direction theory predicts, but the gap between reviewed and self-labelled bonds is the size of its own standard error on a handful of certified firms.
+  The magnitudes are statistically indistinguishable from no effect.
 </ScrollySection>
 
 <ScrollySection id="robustness">
   <div class="section-label">Finding 03</div>
   ## The Null Survives Everything
 
-  A sceptic's first move is to attack the comparison group. Replacing the strict conventional control pool with a broad Compustat pool barely moves the estimate (0.003 versus 0.004), and it stays insignificant. The null is not an artefact of a narrow counterfactual.
-
-  The result also holds across coarsening choices (four to eight bins), across the post-2015 cohorts, and through a placebo that assigns fake treatment two years early and correctly finds nothing, which supports the no-anticipation assumption.
+  A sceptic's first move is to attack the comparison group.
+  Replacing the strict conventional control pool with a broad Compustat pool barely moves the estimate (0.003 versus 0.004), and it stays insignificant.
+  The null is not an artefact of a narrow counterfactual.
+  The result also holds across coarsening choices (four to eight bins), across the post-2015 cohorts, and through a placebo that assigns fake treatment two years early and correctly finds nothing.
+  Regardless of how the data is sliced, the null remains tightly clustered and robust.
 </ScrollySection>
 
 <ScrollySection id="verdict">
   <div class="section-label">Synthesis</div>
   ## The Mechanism, Measured
 
-  Put back together, the assumed machine has no working links. The investment effect is a tight null. The carbon-intensity effect is the weakest of the three: its confidence interval is so wide that it spans large reductions and large increases, so it is uninformative rather than a clean zero.
-
-  Read honestly, none of the three links is detectable in this sample. The result aligns with Mao (2024) and Lam and Wurgler (2024) and does not replicate Fatica and Panzica (2021), a divergence in sample, outcome and estimator rather than a demonstrated mechanism.
+  Put back together, the assumed machine has no working links.
+  The investment effect is a tight null. The carbon-intensity effect is the weakest of the three: its confidence interval is so wide that it spans large reductions and large increases, so it is uninformative rather than a clean zero.
+  Read honestly, none of the three links is detectable in this sample.
+  The result aligns with Mao (2024) and Lam and Wurgler (2024) and does not replicate Fatica and Panzica (2021), a divergence in sample, outcome and estimator rather than a demonstrated mechanism.
 </ScrollySection>
 
 <ScrollySection id="implication">
   <div class="section-label">Section 08</div>
   ## Identifier, Not Engine
 
-  The reason is capital fungibility. A green bond is backed by the issuer's general cash flow, not ring-fenced to new projects, and there is no enforceable green default. So a firm can direct proceeds to a project it would have built anyway, fund the rest of its business with the capital that frees up, and leave total investment unchanged. The label of the financing moves; the level does not (Mao, 2024; Gyura, 2020).
-
-  This points to a signalling reading: firms that were already committed issue to reveal it (Spence, 1978; Riley, 1979). Green bonds work as an information instrument that helps capital markets identify green firms, which is valuable for screening, transition-risk pricing and portfolio allocation. They are not a catalyst that makes firms greener.
+  The reason is capital fungibility.
+  A green bond is backed by the issuer's general cash flow, not strictly ring-fenced to new projects, and there is no enforceable green default.
+  So a firm can direct proceeds to a project it would have built anyway, fund the rest of its business with the capital that frees up, and leave total investment unchanged.
+  The label of the financing moves; the level does not (Mao, 2024; Gyura, 2020).
+  Green bonds work as an information instrument that helps capital markets identify green firms, which is valuable for screening, transition-risk pricing and portfolio allocation.
+  They are not a catalyst that makes firms greener.
 </ScrollySection>
 
 <ScrollySection id="conclusion">
   <div class="section-label">Section 09</div>
   ## Signal, and a Next Step
 
-  This is not greenwashing. Issuers that label eligible projects and report allocation are following the rules; any gap between label and behaviour is a property of the instrument's design, not misconduct (Lyon and Montgomery, 2015). For investors and regulators the implication is precise: issuance volume, announcement returns and verification labels are not proxies for environmental impact.
-
-  I am Lucas Aarts, graduating June 2026 with an MSc in Climate and Sustainable Finance (Vrije Universiteit Amsterdam) and an MSc in Strategic Entrepreneurship (Rotterdam School of Management). I am looking for junior analyst and traineeship roles in sustainable finance and venture capital. [View CV](#) and [Connect on LinkedIn](#).
+  This is not greenwashing.
+  Issuers that label eligible projects and report allocation are following the rules;
+  any gap between label and behaviour is a property of the instrument's design, not misconduct (Lyon and Montgomery, 2015).
+  For investors and regulators the implication is precise: issuance volume, announcement returns and verification labels are not proxies for environmental impact.
+  I am Lucas Aarts, graduating June 2026 with an MSc in Climate and Sustainable Finance (Vrije Universiteit Amsterdam) and an MSc in Strategic Entrepreneurship (Rotterdam School of Management).
+  I am looking for junior analyst and traineeship roles in sustainable finance and venture capital.
+  [View CV](#) and [Connect on LinkedIn](#).
 </ScrollySection>
