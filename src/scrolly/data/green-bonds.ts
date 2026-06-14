@@ -214,8 +214,19 @@ export const config = {
     {
       id: "conclusion",
       navLabel: "Connect",
-      mobileLabel: "Connect"
-      // Removed viz object intentionally 
+      mobileLabel: "Connect",
+      viz: {
+        key: "equation",
+        title: "The Fungibility Identity",
+        mount: "svg",
+        props: {
+          formula: "Total Assets_{t+1} = \\sum (Green_{t} + Conventional_{t})",
+          labels: [
+            "Green bonds do not create new investment,",
+            "they re-label existing cash flow priorities."
+          ]
+        }
+      }
     }
   ]
 };
