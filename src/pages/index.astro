@@ -4,38 +4,9 @@ import QuickLinks from "../components/QuickLinks.astro";
 import FeaturedSection from "../components/FeaturedSection.astro";
 import { featuredProjects } from "../content/featured";
 
-const title = "Al Harkan's Blog";
-const description = "On Media, Technology, and Everything in Between";
+const title = "Lucas Aarts";
+const description = "MSc in Climate & Sustainable Finance | MSc in Strategic Entrepreneurship";
 const permalink = Astro?.site?.href;
-
-const postsPerPage = 10;
-const allPostsGlob = import.meta.glob("../posts/blog/*.{md,mdx}", {
-  eager: true,
-});
-
-interface Post {
-  frontmatter: {
-    title: string;
-    description: string;
-    publishDate: string;
-  };
-  file: string;
-}
-
-const allPosts = Object.values(allPostsGlob) as Post[];
-
-const sortedPosts = allPosts.sort(
-  (a: Post, b: Post) =>
-    new Date(b.frontmatter.publishDate).valueOf() -
-    new Date(a.frontmatter.publishDate).valueOf(),
-);
-
-// Calculate pagination
-const totalPosts = sortedPosts.length;
-const totalPages = Math.ceil(totalPosts / postsPerPage);
-const paginatedPosts = sortedPosts.slice(0, postsPerPage);
-
-// Featured projects data moved to src/content/featured.ts
 ---
 
 <BaseLayout
@@ -46,50 +17,12 @@ const paginatedPosts = sortedPosts.slice(0, postsPerPage);
 >
   <div class="container">
     <h1>{title}</h1>
-    <!-- <p><b>{description}</b></p> -->
     <QuickLinks />
     <hr />
     <FeaturedSection
-      sectionTitle="Visual Pages"
-      items={featuredProjects.slice(0, 6)}
+      sectionTitle="Research & Projects"
+      items={featuredProjects}
     />
-    <!-- sectionSubtitle="This is a list of special pages showcasing some research projects that don't fit the blog formatting." -->
-    <div class="see-more-container">
-      <a href="/data" class="see-more-link">See More →</a>
-    </div>
-    <h1><b>Blog Posts</b></h1>
-    <hr />
-    {
-      paginatedPosts.map((post: Post, index: number) => {
-        const href = `/${post.file.split("/blog/").pop()?.split(".").shift() ?? ""}`;
-        return (
-          <div>
-            {index !== 0 && <hr />}
-            <div class="post-item">
-              <h2>
-                <a href={href}>{post.frontmatter.title}</a>
-              </h2>
-              <p>{post.frontmatter.description}</p>
-              <div class="post-item-footer">
-                <span class="post-item-date">
-                  — {post.frontmatter.publishDate}
-                </span>
-              </div>
-            </div>
-          </div>
-        );
-      })
-    }
-
-    <div class="pagination">
-      {
-        totalPages > 1 && (
-          <a href="/2" class="pagination-next">
-            Next →
-          </a>
-        )
-      }
-    </div>
   </div>
 
   <style>
@@ -97,95 +30,8 @@ const paginatedPosts = sortedPosts.slice(0, postsPerPage);
       margin-bottom: 0.5rem;
     }
 
-    h2 {
-      font-family: var(--font-family-serif);
-      font-weight: 600;
-    }
-
-    .post-item-footer {
-      font-family: var(--font-family-sans);
-      font-weight: 500;
-    }
-
-    .post-item-date {
-      color: var(--text-secondary);
-      text-align: left;
-      font-size: 0.9em;
-      margin-right: 16px;
-    }
-
     hr {
       margin: 20px auto 60px auto;
-    }
-
-    .see-more-container {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 3rem;
-    }
-
-    .see-more-link {
-      color: var(--text-secondary);
-      transition: all 0.2s ease;
-      font-family: var(--font-family-sans);
-      font-size: 1.2em;
-      font-weight: 700;
-      text-decoration: none;
-      box-shadow: inset 0 -0.12em 0 var(--primary-color);
-      -webkit-transition:
-        box-shadow 0.2s ease-in-out,
-        color 0.2s ease-in-out;
-      transition:
-        box-shadow 0.2s ease-in-out,
-        color 0.2s ease-in-out;
-    }
-
-    .see-more-link:hover {
-      color: var(--primary-color);
-      box-shadow: inset 0 -1.5em 0 var(--primary-color);
-      color: #fff;
-    }
-
-    .pagination {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 60px;
-      /* padding: 1rem 0; */
-    }
-
-    .pagination-prev,
-    .pagination-next {
-      /* padding: 0.5rem 1rem; */
-      /* border: 1px solid var(--text-secondary); */
-      /* border-radius: 4px; */
-      /* text-decoration: none; */
-      color: var(--text-secondary);
-      transition: all 0.2s ease;
-      font-family: var(--font-family-sans);
-      font-size: 1.2em;
-      font-weight: 700;
-      text-decoration: none;
-      box-shadow: inset 0 -0.12em 0 var(--primary-color);
-      -webkit-transition:
-        box-shadow 0.2s ease-in-out,
-        color 0.2s ease-in-out;
-      transition:
-        box-shadow 0.2s ease-in-out,
-        color 0.2s ease-in-out;
-    }
-
-    .pagination-prev:hover,
-    .pagination-next:hover {
-      /* border-color: var(--text-primary); */
-      /* background-color: var(--text-primary); */
-      /* color: var(--background); */
-      color: var(--primary-color);
-      box-shadow: inset 0 -1.5em 0 var(--primary-color);
-      color: #fff;
-    }
-
-    .pagination-next {
-      margin-left: auto;
     }
   </style>
 </BaseLayout>
