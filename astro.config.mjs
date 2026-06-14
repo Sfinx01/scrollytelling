@@ -20,7 +20,7 @@ export default defineConfig({
   server: {
     host: true,
   },
-  site: 'https://www.raihankalla.id',
+  site: 'https://scrollytelling-sigma.vercel.app',
   output: 'server',
   adapter: vercel(),
   security: {
