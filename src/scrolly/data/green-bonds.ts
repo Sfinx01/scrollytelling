@@ -25,6 +25,7 @@ export const config = {
         props: {
           series: ["Green Bond Issuance"],
           colors: { "Green Bond Issuance": "#1E8449" },
+          yScale: "log", // Ensures the recent acceleration stays readable
           data: [
             { year: 2014, "Green Bond Issuance": 37 },
             { year: 2016, "Green Bond Issuance": 87 },
@@ -46,10 +47,10 @@ export const config = {
         mount: "svg",
         props: {
           nodes: [
-            { id: "gb", label: "Green Bond\nIssuance", x: 40, y: 120, w: 120, h: 56, color: "#1E8449" },
-            { id: "capex", label: "CAPEX /\nAssets (H1)", x: 470, y: 50, w: 120, h: 56, color: "#1E8449" },
-            { id: "ghg", label: "Scope 1 & 2\nIntensity (H2)", x: 470, y: 190, w: 120, h: 56, color: "#1E8449" },
-            { id: "cert", label: "External\nReview (H3)", x: 250, y: 200, w: 120, h: 56, color: "#1E8449" }
+            { id: "gb", label: "Green Bond\nIssuance", x: 30, y: 120, w: 110, h: 56, color: "#1E8449" },
+            { id: "capex", label: "CAPEX /\nAssets (H1)", x: 240, y: 120, w: 110, h: 56, color: "#1E8449" },
+            { id: "ghg", label: "Scope 1 & 2\nIntensity (H2)", x: 450, y: 120, w: 110, h: 56, color: "#1E8449" },
+            { id: "cert", label: "External\nReview (H3)", x: 135, y: 220, w: 110, h: 56, color: "#1E8449" }
           ],
           paths: [
             { from: "gb", to: "capex", sig: true, coef: "Expected +" },
@@ -65,18 +66,21 @@ export const config = {
       navLabel: "Method",
       mobileLabel: "Matching",
       viz: {
-        key: "matrix",
-        title: "Cohort-Aware Coarsened Exact Matching",
+        key: "bubbles",
+        title: "Covariate Balancing via Exact Matching",
         mount: "svg",
         props: {
-          parties: ["Firm Size", "Region", "Industry", "Pre-Emissions Trend"],
-          media: ["Coarsening", "Post-Match Balance"],
-          sigData: {
-            "Firm Size": { "Coarsening": "5 bins (log assets)", "Post-Match Balance": "Balanced" },
-            "Region": { "Coarsening": "Exact", "Post-Match Balance": "Balanced" },
-            "Industry": { "Coarsening": "Exact (SIC division)", "Post-Match Balance": "Balanced" },
-            "Pre-Emissions Trend": { "Coarsening": "5 bins (level fallback)", "Post-Match Balance": "Balanced" }
-          }
+          centers: [
+            { id: "treated", label: "Treated\nIssuers", dx: -90, dy: 10, r: 46, color: "#1E8449" },
+            { id: "control", label: "Matched\nControls", dx: 90, dy: 10, r: 46, color: "#7F8C8D" }
+          ],
+          vars: [
+            { label: "Firm Size\n(log assets)", cat: "media", angle: -90, dist: 130, r: 32, color: "#2980B9" },
+            { label: "Region", cat: "media", angle: -30, dist: 150, r: 28, color: "#2980B9" },
+            { label: "Industry\n(SIC)", cat: "socio", angle: 210, dist: 150, r: 28, color: "#2980B9" },
+            { label: "Pre-Trend\nEmissions", cat: "socio", angle: 90, dist: 130, r: 32, color: "#2980B9" }
+          ],
+          cornerLabels: { media: "MATCHING COVARIATES", socioEcon: "BALANCED SAMPLE" }
         }
       }
     },
@@ -89,21 +93,25 @@ export const config = {
         title: "Dynamic Effect on CAPEX / Assets (Callaway-Sant'Anna)",
         mount: "svg",
         props: {
-          // PLACEHOLDER event-study points: replace with your aggte(type="dynamic")
-          // output. y = att.egt, ylo = att.egt - 1.96*se.egt, yhi = att.egt + 1.96*se.egt.
           xLabel: "Years relative to issuance",
           yLabel: "ATT on CAPEX / Assets",
           xName: "Event time",
           yName: "ATT",
           xTickSuffix: "",
           yTickSuffix: "",
-          xDomain: [-5, 5],
+          xDomain: [-10, 5],
           yDomain: [-0.02, 0.02],
           showTrendLine: false,
           referenceLine: { y: 0, label: "No effect", color: "#7F8C8D" },
           vLine: { x: 0, label: "Issuance", color: "#1E8449" },
           islandColors: { "Pre-issuance": "#95A5A6", "Post-issuance": "#1E8449" },
           provinces: [
+            { name: "t-10", x: -10, y: 0.001, ylo: -0.005, yhi: 0.007, group: "Pre-issuance" },
+            { name: "t-9", x: -9, y: -0.002, ylo: -0.008, yhi: 0.004, group: "Pre-issuance" },
+            { name: "t-8", x: -8, y: 0.000, ylo: -0.006, yhi: 0.006, group: "Pre-issuance" },
+            { name: "t-7", x: -7, y: 0.001, ylo: -0.005, yhi: 0.007, group: "Pre-issuance" },
+            { name: "t-6", x: -6, y: -0.001, ylo: -0.007, yhi: 0.005, group: "Pre-issuance" },
+            { name: "t-5", x: -5, y: 0.000, ylo: -0.006, yhi: 0.006, group: "Pre-issuance" },
             { name: "t-4", x: -4, y: 0.001, ylo: -0.006, yhi: 0.008, group: "Pre-issuance" },
             { name: "t-3", x: -3, y: -0.001, ylo: -0.007, yhi: 0.006, group: "Pre-issuance" },
             { name: "t-2", x: -2, y: 0.000, ylo: -0.006, yhi: 0.006, group: "Pre-issuance" },
@@ -112,7 +120,8 @@ export const config = {
             { name: "t+1", x: 1, y: 0.002, ylo: -0.005, yhi: 0.009, group: "Post-issuance" },
             { name: "t+2", x: 2, y: 0.003, ylo: -0.005, yhi: 0.010, group: "Post-issuance" },
             { name: "t+3", x: 3, y: 0.002, ylo: -0.006, yhi: 0.010, group: "Post-issuance" },
-            { name: "t+4", x: 4, y: 0.001, ylo: -0.008, yhi: 0.010, group: "Post-issuance" }
+            { name: "t+4", x: 4, y: 0.001, ylo: -0.008, yhi: 0.010, group: "Post-issuance" },
+            { name: "t+5", x: 5, y: 0.000, ylo: -0.009, yhi: 0.009, group: "Post-issuance" }
           ]
         }
       }
@@ -122,23 +131,25 @@ export const config = {
       navLabel: "Significance",
       mobileLabel: "Null Test",
       viz: {
-        key: "precision",
-        title: "Distance From Significance: All Three Hypotheses",
+        key: "scatter",
+        title: "Simplified Estimates vs 5% Threshold",
         mount: "svg",
         props: {
-          // v = coefficient / (1.96 * SE): the share of the 5% critical value reached.
-          // |v| >= 1 would clear the threshold. All three sit well short of it.
-          domain: [-1, 1],
-          centerLabel: "No measurable effect (0)",
-          legendLabel: "Each dot is a tested hypothesis; the edge marks 5% significance",
-          valueName: "Share of 5% threshold",
-          color: "#1E8449",
-          minLabel: "Significant -",
-          maxLabel: "Significant +",
-          data: [
-            { p: "H1: CAPEX / assets", v: 0.26 },
-            { p: "H2: Carbon intensity", v: 0.31 },
-            { p: "H3: Certification gap", v: 0.51 }
+          xLabel: "Hypothesis tested",
+          yLabel: "Share of 5% threshold reached",
+          xName: "Test",
+          yName: "Value",
+          xTickSuffix: "",
+          yTickSuffix: "",
+          xDomain: [0, 4],
+          yDomain: [-1.2, 1.2],
+          showTrendLine: false,
+          referenceLine: { y: 0, label: "Zero Effect", color: "#7F8C8D" },
+          islandColors: { "H1": "#2980B9", "H2": "#D4AC0D", "H3": "#C0392B" },
+          provinces: [
+            { name: "H1: CAPEX", x: 1, y: 0.26, ylo: -0.26, yhi: 0.78, group: "H1" },
+            { name: "H2: GHG", x: 2, y: -0.31, ylo: -0.95, yhi: 0.33, group: "H2" },
+            { name: "H3: Cert", x: 3, y: 0.51, ylo: -0.49, yhi: 1.51, group: "H3" }
           ]
         }
       }
@@ -148,27 +159,20 @@ export const config = {
       navLabel: "Robustness",
       mobileLabel: "Robust",
       viz: {
-        key: "matrix",
+        key: "bubbles",
         title: "The Null Survives Every Specification",
         mount: "svg",
         props: {
-          parties: [
-            "Matched conventional pool",
-            "Broad Compustat pool",
-            "CEM: 4 bins",
-            "CEM: 8 bins",
-            "Post-2015 cohorts",
-            "Placebo (t-2)"
+          centers: [
+            { id: "null", label: "Tight\nNull", dx: 0, dy: 0, r: 50, color: "#7F8C8D" }
           ],
-          media: ["CAPEX ATT", "Significant?"],
-          sigData: {
-            "Matched conventional pool": { "CAPEX ATT": "0.004", "Significant?": "No" },
-            "Broad Compustat pool": { "CAPEX ATT": "0.003", "Significant?": "No" },
-            "CEM: 4 bins": { "CAPEX ATT": "0.0025", "Significant?": "No" },
-            "CEM: 8 bins": { "CAPEX ATT": "0.0038", "Significant?": "No" },
-            "Post-2015 cohorts": { "CAPEX ATT": "0.0029", "Significant?": "No" },
-            "Placebo (t-2)": { "CAPEX ATT": "~0", "Significant?": "Correctly null" }
-          }
+          vars: [
+            { label: "Broad\nPool", cat: "media", angle: -45, dist: 130, r: 35, color: "#95A5A6" },
+            { label: "4 Bins", cat: "media", angle: -135, dist: 130, r: 35, color: "#95A5A6" },
+            { label: "Post-2015", cat: "socio", angle: 45, dist: 130, r: 35, color: "#95A5A6" },
+            { label: "Placebo\n(t-2)", cat: "socio", angle: 135, dist: 130, r: 35, color: "#95A5A6" }
+          ],
+          cornerLabels: { media: "SPECIFICATIONS", socioEcon: "ROBUSTNESS CHECKS" }
         }
       }
     },
@@ -182,10 +186,10 @@ export const config = {
         mount: "svg",
         props: {
           nodes: [
-            { id: "gb", label: "Green Bond\nIssuance", x: 40, y: 120, w: 120, h: 56, color: "#1E8449" },
-            { id: "capex", label: "CAPEX /\nAssets (H1)", x: 470, y: 50, w: 120, h: 56, color: "#7F8C8D" },
-            { id: "ghg", label: "Scope 1 & 2\nIntensity (H2)", x: 470, y: 190, w: 120, h: 56, color: "#7F8C8D" },
-            { id: "cert", label: "External\nReview (H3)", x: 250, y: 200, w: 120, h: 56, color: "#7F8C8D" }
+            { id: "gb", label: "Green Bond\nIssuance", x: 30, y: 120, w: 110, h: 56, color: "#1E8449" },
+            { id: "capex", label: "CAPEX /\nAssets (H1)", x: 240, y: 120, w: 110, h: 56, color: "#7F8C8D" },
+            { id: "ghg", label: "Scope 1 & 2\nIntensity (H2)", x: 450, y: 120, w: 110, h: 56, color: "#7F8C8D" },
+            { id: "cert", label: "External\nReview (H3)", x: 135, y: 220, w: 110, h: 56, color: "#7F8C8D" }
           ],
           paths: [
             { from: "gb", to: "capex", sig: false, coef: "Tight null (0.002)" },
@@ -201,35 +205,17 @@ export const config = {
       navLabel: "Implication",
       mobileLabel: "Why",
       viz: {
-        key: "bubbles",
+        key: "upgrade",
         title: "Capital Fungibility: Why the Money Does Not Move the Needle",
         mount: "svg",
-        props: {
-          centers: [
-            { id: "green", label: "Green-Labelled\nProjects", dx: -110, dy: 0, r: 46, color: "#1E8449" },
-            { id: "cash", label: "Firm-Wide\nCash Flow", dx: 110, dy: 0, r: 46, color: "#7F8C8D" }
-          ],
-          vars: [
-            { label: "Bond Proceeds", cat: "media", angle: -110, dist: 190, r: 30, color: "#27AE60" },
-            { label: "Displaced Spend", cat: "media", angle: -40, dist: 185, r: 30, color: "#95A5A6" }
-          ],
-          cornerLabels: {
-            media: "CAPITAL IN",
-            socioEcon: "WHERE IT GOES"
-          }
-        }
+        props: {} // Renders the flow diagram from the upgrade blueprint
       }
     },
     {
       id: "conclusion",
       navLabel: "Connect",
-      mobileLabel: "Connect",
-      viz: {
-        key: "equation",
-        title: "Signalling, Not Transition",
-        mount: "svg",
-        props: {}
-      }
+      mobileLabel: "Connect"
+      // Removed viz object intentionally 
     }
   ]
 };
