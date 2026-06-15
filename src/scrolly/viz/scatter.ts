@@ -68,14 +68,18 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
   const islandColors = (props?.islandColors || fallbackIslandColors) as Record<string, string>;
   const xDomain = (props?.xDomain || [32, 70]) as [number, number];
   const yDomain = (props?.yDomain || [65, 92]) as [number, number];
-  const referenceLine = (props?.referenceLine || { y: 79, label: "Internet (flat)", color: "#2980B9" }) as {
-    y: number;
-    label: string;
-    color: string;
-  };
+  // referenceLine can be disabled by passing null.
+  const referenceLine =
+    props?.referenceLine === null
+      ? null
+      : ((props?.referenceLine || { y: 79, label: "Internet (flat)", color: "#2980B9" }) as {
+          y: number;
+          label: string;
+          color: string;
+        });
   const trendLineStyle = (props?.trendLine || { color: "#C0392B" }) as { color: string };
 
-  // New, backward-compatible options.
+  // Backward-compatible options.
   const xLabel = props?.xLabel ?? "Radio Consumption (% population)";
   const yLabel = props?.yLabel ?? "Voter Turnout (%)";
   const xName = props?.xName ?? "Radio";
@@ -84,9 +88,11 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
   const yTickSuffix = props?.yTickSuffix ?? "%";
   const showTrendLine = props?.showTrendLine ?? true;
   const vLine = props?.vLine as { x: number; label: string; color: string } | undefined;
+  // Categorical y-axis labels, for forest / coefficient plots.
+  const yTickLabels = props?.yTickLabels as Array<{ value: number; label: string }> | undefined;
 
-  // Generic accessors so event-study data (x / y / group / ylo / yhi) works
-  // alongside the original radio / turnout / island fields.
+  // Generic accessors so event-study / forest data (x / y / group / ylo / yhi /
+  // xlo / xhi) works alongside the original radio / turnout / island fields.
   const getX = (d: any) => (d.x ?? d.radio);
   const getY = (d: any) => (d.y ?? d.turnout);
   const getGroup = (d: any) => (d.group ?? d.island);
@@ -106,7 +112,16 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
     .attr("class", "axis")
     .attr("transform", `translate(0,${iH})`)
     .call(d3.axisBottom(x).ticks(6).tickFormat((d: number) => d + xTickSuffix));
-  svg.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(5).tickFormat((d: number) => d + yTickSuffix));
+
+  const yAxis = d3.axisLeft(y);
+  if (yTickLabels && yTickLabels.length) {
+    const ymap: Record<number, string> = {};
+    yTickLabels.forEach((t) => (ymap[t.value] = t.label));
+    yAxis.tickValues(yTickLabels.map((t) => t.value)).tickFormat((d: number) => ymap[d] ?? "");
+  } else {
+    yAxis.ticks(5).tickFormat((d: number) => d + yTickSuffix);
+  }
+  svg.append("g").attr("class", "axis").call(yAxis);
 
   svg
     .append("text")
@@ -117,16 +132,18 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
     .style("font-size", "11px")
     .attr("fill", "var(--ink-muted)")
     .text(xLabel);
-  svg
-    .append("text")
-    .attr("transform", "rotate(-90)")
-    .attr("x", -iH / 2)
-    .attr("y", -40)
-    .attr("text-anchor", "middle")
-    .style("font-family", "Inter,sans-serif")
-    .style("font-size", "11px")
-    .attr("fill", "var(--ink-muted)")
-    .text(yLabel);
+  if (yLabel) {
+    svg
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -iH / 2)
+      .attr("y", -40)
+      .attr("text-anchor", "middle")
+      .style("font-family", "Inter,sans-serif")
+      .style("font-size", "11px")
+      .attr("fill", "var(--ink-muted)")
+      .text(yLabel);
+  }
 
   // Optional OLS trend line (default on, for the original correlation use).
   if (showTrendLine) {
@@ -158,7 +175,7 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
       .attr("y2", y(slope * xDomain[1] + intercept));
   }
 
-  // Optional vertical reference line (e.g. treatment timing in an event study).
+  // Optional vertical reference line (e.g. treatment timing, or a zero line in a forest).
   if (vLine) {
     svg
       .append("line")
@@ -185,7 +202,7 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
   if (prevTooltip) prevTooltip.remove();
   const tooltip = d3.select(panelEl).append("div").attr("class", "d3-tooltip");
 
-  // Optional confidence-interval whiskers (drawn when a point carries ylo / yhi).
+  // Vertical CI whiskers (event study): point carries ylo / yhi.
   provinces.forEach((d) => {
     if (d.ylo == null || d.yhi == null) return;
     svg
@@ -199,6 +216,20 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
       .attr("opacity", 0.45);
   });
 
+  // Horizontal CI whiskers (forest / coefficient plot): point carries xlo / xhi.
+  provinces.forEach((d) => {
+    if (d.xlo == null || d.xhi == null) return;
+    svg
+      .append("line")
+      .attr("x1", x(d.xlo))
+      .attr("x2", x(d.xhi))
+      .attr("y1", y(getY(d)))
+      .attr("y2", y(getY(d)))
+      .attr("stroke", islandColors[getGroup(d)] || "var(--ink-muted)")
+      .attr("stroke-width", 1.5)
+      .attr("opacity", 0.45);
+  });
+
   provinces.forEach((d, i) => {
     svg
       .append("circle")
@@ -206,20 +237,26 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
       .attr("cy", y(getY(d)))
       .attr("r", 0)
       .attr("fill", islandColors[getGroup(d)] || "var(--ink-muted)")
-      .attr("opacity", 0.8)
+      .attr("opacity", 0.85)
       .attr("stroke", "var(--paper)")
       .attr("stroke-width", 1.2)
       .on("mouseover", function (this: SVGCircleElement, evt: any) {
         d3.select(this).attr("r", 9).attr("opacity", 1);
-        const ci = d.ylo != null && d.yhi != null ? `<br>95% CI: [${d.ylo}, ${d.yhi}]` : "";
+        const ci =
+          d.ylo != null && d.yhi != null
+            ? `<br>95% CI: [${d.ylo}, ${d.yhi}]`
+            : d.xlo != null && d.xhi != null
+            ? `<br>95% CI: [${d.xlo}, ${d.xhi}]`
+            : "";
+        const yLine = yTickLabels && yTickLabels.length ? "" : `<br>${yName}: ${getY(d)}${yTickSuffix}`;
         tooltip
           .classed("visible", true)
-          .html(`<strong>${d.name}</strong><br>${xName}: ${getX(d)}${xTickSuffix}<br>${yName}: ${getY(d)}${yTickSuffix}${ci}`)
+          .html(`<strong>${d.name}</strong><br>${xName}: ${getX(d)}${xTickSuffix}${yLine}${ci}`)
           .style("left", evt.offsetX + 12 + "px")
           .style("top", evt.offsetY - 40 + "px");
       })
       .on("mouseout", function (this: SVGCircleElement) {
-        d3.select(this).attr("r", 6).attr("opacity", 0.8);
+        d3.select(this).attr("r", 6).attr("opacity", 0.85);
         tooltip.classed("visible", false);
       })
       .transition()
@@ -228,32 +265,34 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
       .attr("r", 6);
   });
 
-  svg
-    .append("line")
-    .attr("x1", x(xDomain[0]))
-    .attr("y1", y(referenceLine.y))
-    .attr("x2", x(xDomain[1]))
-    .attr("y2", y(referenceLine.y))
-    .attr("stroke", referenceLine.color)
-    .attr("stroke-dasharray", "4,4")
-    .attr("stroke-width", 1.5)
-    .attr("opacity", 0.4);
+  if (referenceLine) {
+    svg
+      .append("line")
+      .attr("x1", x(xDomain[0]))
+      .attr("y1", y(referenceLine.y))
+      .attr("x2", x(xDomain[1]))
+      .attr("y2", y(referenceLine.y))
+      .attr("stroke", referenceLine.color)
+      .attr("stroke-dasharray", "4,4")
+      .attr("stroke-width", 1.5)
+      .attr("opacity", 0.4);
 
-  svg
-    .append("text")
-    .attr("x", x(xDomain[1] - 2))
-    .attr("y", y(referenceLine.y) - 7)
-    .attr("text-anchor", "end")
-    .attr("fill", referenceLine.color)
-    .style("font-size", "10px")
-    .style("font-family", "Inter,sans-serif")
-    .style("font-style", "italic")
-    .text(referenceLine.label);
+    svg
+      .append("text")
+      .attr("x", x(xDomain[1] - 2))
+      .attr("y", y(referenceLine.y) - 7)
+      .attr("text-anchor", "end")
+      .attr("fill", referenceLine.color)
+      .style("font-size", "10px")
+      .style("font-family", "Inter,sans-serif")
+      .style("font-style", "italic")
+      .text(referenceLine.label);
+  }
 
-  const islands = [...new Set(provinces.map((d) => getGroup(d)))];
+  const groups = [...new Set(provinces.map((d) => getGroup(d)))];
   const legG = svg.append("g").attr("transform", `translate(${iW + 10}, 10)`);
-  islands.forEach((isl, i) => {
-    legG.append("circle").attr("cx", 6).attr("cy", i * 18).attr("r", 5).attr("fill", islandColors[isl as string]);
+  groups.forEach((g, i) => {
+    legG.append("circle").attr("cx", 6).attr("cy", i * 18).attr("r", 5).attr("fill", islandColors[g as string]);
     legG
       .append("text")
       .attr("x", 16)
@@ -261,6 +300,6 @@ export default function renderScatter({ mountEl, panelEl, props }: ScatterArgs) 
       .style("font-size", "9px")
       .style("font-family", "Inter,sans-serif")
       .attr("fill", "var(--ink-muted)")
-      .text(isl as string);
+      .text(g as string);
   });
 }
