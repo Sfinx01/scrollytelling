@@ -12,7 +12,7 @@ export default function renderTimeline({ mountEl, legendEl, props }: TimelineArg
 
   const W = 600;
   const H = 400;
-  const M = { top: 20, right: 70, bottom: 50, left: 50 };
+  const M = { top: 20, right: 90, bottom: 50, left: 55 };
   const iW = W - M.left - M.right;
   const iH = H - M.top - M.bottom;
 
@@ -32,6 +32,12 @@ export default function renderTimeline({ mountEl, legendEl, props }: TimelineArg
 
   const data = (props?.data || fallbackData) as Array<Record<string, number>>;
 
+  // Backward-compatible options.
+  const yDomain = (props?.yDomain || [0, 100]) as [number, number];
+  const yTickSuffix = props?.yTickSuffix ?? "%";
+  const seriesLabels = props?.seriesLabels as Record<string, string> | undefined;
+  const legendSuffix = props?.legendSuffix ?? (seriesLabels ? "" : " Penetration");
+
   const svg = d3
     .select(mountEl)
     .attr("viewBox", `0 0 ${W} ${H}`)
@@ -43,7 +49,7 @@ export default function renderTimeline({ mountEl, legendEl, props }: TimelineArg
   const maxYear = years.length ? d3.max(years) : 2019;
 
   const x = d3.scaleLinear().domain([minYear, maxYear]).range([0, iW]);
-  const y = d3.scaleLinear().domain([0, 100]).range([iH, 0]);
+  const y = d3.scaleLinear().domain(yDomain).range([iH, 0]);
 
   svg
     .append("g")
@@ -55,12 +61,15 @@ export default function renderTimeline({ mountEl, legendEl, props }: TimelineArg
     .attr("class", "axis")
     .attr("transform", `translate(0,${iH})`)
     .call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(6));
-  svg.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(5).tickFormat((d: number) => d + "%"));
+  svg.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(5).tickFormat((d: number) => d + yTickSuffix));
 
   const defaultColors = { internet: "#2980B9", tv: "#1E8449", radio: "#C0392B" };
   const colors = (props?.colors || defaultColors) as Record<string, string>;
   const series = (props?.series || ["internet", "tv", "radio"]) as string[];
   const annotation = (props?.annotation || { year: 2015, label: "Digital rises" }) as { year: number; label: string };
+
+  const endLabel = (key: string) =>
+    seriesLabels?.[key] ?? (key === "internet" ? "Internet" : key === "tv" ? "TV" : key === "radio" ? "Radio" : key);
 
   const line = d3
     .line()
@@ -75,7 +84,7 @@ export default function renderTimeline({ mountEl, legendEl, props }: TimelineArg
       .datum(lineData)
       .attr("fill", "none")
       .attr("stroke", colors[key] || "#999")
-      .attr("stroke-width", key === "internet" ? 3 : 2)
+      .attr("stroke-width", series.length === 1 ? 3 : key === "internet" ? 3 : 2)
       .attr("d", line);
 
     const totalLength = path.node().getTotalLength();
@@ -108,7 +117,7 @@ export default function renderTimeline({ mountEl, legendEl, props }: TimelineArg
       .style("font-family", "Inter,sans-serif")
       .style("font-size", "11px")
       .style("font-weight", "700")
-      .text(key === "internet" ? "Internet" : key === "tv" ? "TV" : "Radio")
+      .text(endLabel(key))
       .attr("opacity", 0)
       .transition()
       .delay(1800)
@@ -146,11 +155,11 @@ export default function renderTimeline({ mountEl, legendEl, props }: TimelineArg
   if (legendEl) {
     legendEl.innerHTML = series
       .map((k) => {
-        const label = k === "tv" ? "TV" : k.charAt(0).toUpperCase() + k.slice(1);
+        const label = seriesLabels?.[k] ?? (k === "tv" ? "TV" : k.charAt(0).toUpperCase() + k.slice(1));
         return `
     <div class="legend-item">
       <div class="legend-swatch" style="background:${(colors as any)[k]};height:${k === "internet" ? "3px" : "2px"}"></div>
-      <span>${label} Penetration</span>
+      <span>${label}${legendSuffix}</span>
     </div>
   `;
       })
