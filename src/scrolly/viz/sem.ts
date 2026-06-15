@@ -58,7 +58,7 @@ export default function renderSEM({ mountEl, props }: SemArgs) {
     { from: "internet", to: "direct", sig: false, coef: "ns" },
   ];
 
-  const nodes = (props?.nodes || fallbackNodes) as Array<{ id: string; label: string; x: number; y: number; w: number; h: number; color: string }>;
+  const nodes = (props?.nodes || fallbackNodes) as Array<{ id: string; label: string; x: number; y: number; w: number; h: number; color: string; point?: boolean }>;
   const paths = (props?.paths || fallbackPaths) as Array<{ from: string; to: string; sig: boolean; coef: string }>;
   const legend = (props?.legend || { sigLabel: "Significant (p<0.05)", insigLabel: "Not significant" }) as { sigLabel: string; insigLabel: string };
 
@@ -69,7 +69,9 @@ export default function renderSEM({ mountEl, props }: SemArgs) {
   paths.forEach((p, i) => {
     const from = getNode(p.from);
     const to = getNode(p.to);
-    const x1 = from.x + from.w;
+    // A "point" target (e.g. a junction sitting on another link) is reached at its
+    // own coordinates; a normal node is reached at its left edge.
+    const x1 = from.point ? from.x : from.x + from.w;
     const y1 = from.y + from.h / 2;
     const x2 = to.x;
     const y2 = to.y + to.h / 2;
@@ -127,6 +129,17 @@ export default function renderSEM({ mountEl, props }: SemArgs) {
   nodes.forEach((n, i) => {
     const g = svg.append("g").attr("opacity", 0);
     g.transition().delay(i * 60).duration(400).attr("opacity", 1);
+
+    // Junction marker: a small dot that sits on a link, used as an arrow target.
+    if (n.point) {
+      g.append("circle")
+        .attr("cx", n.x)
+        .attr("cy", n.y + n.h / 2)
+        .attr("r", 4)
+        .attr("fill", n.color || "var(--ink-muted)");
+      return;
+    }
+
     g.append("rect")
       .attr("x", n.x)
       .attr("y", n.y)
